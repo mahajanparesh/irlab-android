@@ -42,7 +42,13 @@ final class IrRenderer implements GLSurfaceView.Renderer, SurfaceTexture.OnFrame
         float meanAbsDelta;
         float fps;
         boolean consecutive;
+        /** Cells (96x128 grid) whose luminance jumped by more than SPOT_DELTA, and their bounding box. */
+        int spotCells;
+        int spotMinX, spotMinY, spotMaxX, spotMaxY;
     }
+
+    static final int GRID_W = 96, GRID_H = 128;
+    static final float SPOT_DELTA = 0.16f;
 
     private static final String VERTEX =
             "attribute vec4 aPos;\n" +
@@ -102,7 +108,7 @@ final class IrRenderer implements GLSurfaceView.Renderer, SurfaceTexture.OnFrame
         int id, aPos, aTex, uTexM, uTex, uMode, uPalette, uBrightness, uContrast, uGamma, uEnhance, uTexel, uIrW;
     }
 
-    private static final int STATS_W = 96, STATS_H = 128;
+    private static final int STATS_W = GRID_W, STATS_H = GRID_H;
 
     private final GLSurfaceView view;
     private final Host host;
@@ -369,6 +375,19 @@ final class IrRenderer implements GLSurfaceView.Renderer, SurfaceTexture.OnFrame
                 float d = Math.abs(l - prevLuma[i]);
                 sumAbs += d;
                 if (d > maxD) maxD = d;
+                if (d > SPOT_DELTA) {
+                    int x = i % STATS_W, y = i / STATS_W;
+                    if (s.spotCells == 0) {
+                        s.spotMinX = s.spotMaxX = x;
+                        s.spotMinY = s.spotMaxY = y;
+                    } else {
+                        s.spotMinX = Math.min(s.spotMinX, x);
+                        s.spotMaxX = Math.max(s.spotMaxX, x);
+                        s.spotMinY = Math.min(s.spotMinY, y);
+                        s.spotMaxY = Math.max(s.spotMaxY, y);
+                    }
+                    s.spotCells++;
+                }
             }
             prevLuma[i] = l;
         }

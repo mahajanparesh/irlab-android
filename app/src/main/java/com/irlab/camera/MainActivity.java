@@ -121,6 +121,7 @@ public class MainActivity extends Activity implements IrRenderer.Host, CameraCon
         resumed = false;
         irTest.cancel();
         renderer.setFastStats(false);
+        if (preTestSettings != null) preTestSettings = null; // settings object itself was never changed
         camera.close();
         glView.onPause();
         surfaceTexture = null; // destroyed with the GL context; a new one arrives on resume
@@ -290,6 +291,7 @@ public class MainActivity extends Activity implements IrRenderer.Host, CameraCon
         camIndex = (camIndex + 1) % cameras.size();
         irTest.cancel();
         renderer.setFastStats(false);
+        preTestSettings = null;
         settings.manualFocus = false;
         maybeOpenCamera();
     }
@@ -303,6 +305,7 @@ public class MainActivity extends Activity implements IrRenderer.Host, CameraCon
         } else if (irTest.isRunning()) {
             irTest.cancel();
             renderer.setFastStats(false);
+            restoreAfterIrTest();
             status.setVisibility(View.GONE);
         }
         pushParams();
@@ -314,15 +317,33 @@ public class MainActivity extends Activity implements IrRenderer.Host, CameraCon
         pushParams();
     }
 
+    /** Settings in force before IR TEST darkened the exposure; null when no test is running. */
+    private CameraController.Settings preTestSettings;
+
     private void startIrTest() {
         if (current == null) return;
         irTest.start();
         renderer.setFastStats(true);
+        // Under-expose by ~2 stops so ordinary bright areas don't clip; a remote's LED still will.
+        if (preTestSettings == null) preTestSettings = settings.copy();
+        CameraController.Settings dark = preTestSettings.copy();
+        dark.manualExposure = false;
+        int evLo = current.evRange == null ? 0 : current.evRange.getLower();
+        dark.evIndex = Math.max(evLo, Math.round(-2f / current.evStep));
+        camera.updateSettings(dark);
         showStatus("IR REMOTE TEST starting…", false);
+    }
+
+    private void restoreAfterIrTest() {
+        if (preTestSettings != null) {
+            preTestSettings = null;
+            pushSettings();
+        }
     }
 
     private void finishIrTest() {
         renderer.setFastStats(false);
+        restoreAfterIrTest();
         status.setVisibility(View.GONE);
         String summary = irTest.summary();
         if (irTest.valid() && current != null) {
@@ -334,7 +355,7 @@ public class MainActivity extends Activity implements IrRenderer.Host, CameraCon
         }
         new AlertDialog.Builder(this, android.R.style.Theme_DeviceDefault_Dialog_Alert)
                 .setTitle("IR test · camera " + (current == null ? "?" : current.id))
-                .setMessage(summary + "\n\nThe magenta overlay marks clipped (fully saturated) pixels. A real IR LED shows as a "
+                .setMessage(summary + "\n\nDuring the test the exposure is lowered ~2 stops; magenta marks clipped pixels. A real IR LED shows as a "
                         + "pulsing white/violet dot.")
                 .setPositiveButton("Run again", (d, w) -> startIrTest())
                 .setNegativeButton("Done", (d, w) -> setMode(ProcessingParams.MODE_IR_MONO))

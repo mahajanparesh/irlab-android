@@ -89,7 +89,7 @@ final class CameraController {
     private Size previewSize;
     private Settings settings = new Settings();
     private long lastHudMs;
-    private int openGeneration;
+    private volatile int openGeneration;
 
     // pending RAW capture
     private TotalCaptureResult pendingResult;
@@ -178,12 +178,13 @@ final class CameraController {
                 @Override public void onDisconnected(CameraDevice cam) {
                     cam.close();
                     if (device == cam) device = null;
-                    postError("Camera disconnected (another app may have taken it).");
+                    // Ignore disconnects of a camera we have already moved away from (pause, switch).
+                    if (gen == openGeneration) postError("Camera disconnected (another app may have taken it).");
                 }
                 @Override public void onError(CameraDevice cam, int error) {
                     cam.close();
                     if (device == cam) device = null;
-                    postError("Camera error " + error);
+                    if (gen == openGeneration) postError("Camera error " + error);
                 }
             }, bg);
         } catch (Exception e) {
