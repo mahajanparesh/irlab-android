@@ -57,6 +57,8 @@ final class CameraController {
         boolean awbOff;
         boolean lowLight;
         boolean saveRaw = true;
+        /** Freeze auto-exposure and auto-white-balance (used by the IR remote test). */
+        boolean lock3A;
 
         Settings copy() {
             Settings s = new Settings();
@@ -69,6 +71,7 @@ final class CameraController {
             s.awbOff = awbOff;
             s.lowLight = lowLight;
             s.saveRaw = saveRaw;
+            s.lock3A = lock3A;
             return s;
         }
     }
@@ -279,7 +282,9 @@ final class CameraController {
                 Range<Integer> fps = lowestFpsRange();
                 if (fps != null) b.set(CaptureRequest.CONTROL_AE_TARGET_FPS_RANGE, fps);
             }
+            b.set(CaptureRequest.CONTROL_AE_LOCK, s.lock3A);
         }
+        b.set(CaptureRequest.CONTROL_AWB_LOCK, s.lock3A);
 
         if (s.lowLight && supports(CameraCharacteristics.NOISE_REDUCTION_AVAILABLE_NOISE_REDUCTION_MODES,
                 CaptureRequest.NOISE_REDUCTION_MODE_HIGH_QUALITY)) {

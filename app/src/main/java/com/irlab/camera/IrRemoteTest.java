@@ -21,7 +21,7 @@ final class IrRemoteTest {
     private static final int MAX_SPOT_CELLS = 80;    // of 96x128 cells (~0.65 % of the frame)
     private static final int MAX_SPOT_SPAN = 14;     // cells; ~220 px on a 1440 px wide frame
     private static final int CLUSTER_RADIUS = 6;     // cells
-    private static final int EVENTS_REQUIRED = 3;
+    private static final int EVENTS_REQUIRED = 5;   // a held remote button repeats ~10x per second
 
     private long startMs;
     private boolean running;

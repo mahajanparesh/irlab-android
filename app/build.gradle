@@ -10,8 +10,19 @@ android {
         applicationId 'com.irlab.camera'
         minSdk 30
         targetSdk 35
-        versionCode 3
-        versionName '1.2'
+        versionCode 4
+        versionName '1.3'
+    }
+
+    // Fixed debug keystore (well-known password "android") so every CI build has the same signature
+    // and Android installs new versions as updates, keeping app data. For personal sideloading only.
+    signingConfigs {
+        debug {
+            storeFile file('debug.keystore')
+            storePassword 'android'
+            keyAlias 'androiddebugkey'
+            keyPassword 'android'
+        }
     }
 
     buildTypes {

@@ -121,7 +121,8 @@ public class MainActivity extends Activity implements IrRenderer.Host, CameraCon
         resumed = false;
         irTest.cancel();
         renderer.setFastStats(false);
-        if (preTestSettings != null) preTestSettings = null; // settings object itself was never changed
+        if (pendingTestStart != null) { uiHandler.removeCallbacks(pendingTestStart); pendingTestStart = null; }
+        preTestSettings = null; // the user's settings object itself was never changed
         camera.close();
         glView.onPause();
         surfaceTexture = null; // destroyed with the GL context; a new one arrives on resume
@@ -291,6 +292,7 @@ public class MainActivity extends Activity implements IrRenderer.Host, CameraCon
         camIndex = (camIndex + 1) % cameras.size();
         irTest.cancel();
         renderer.setFastStats(false);
+        if (pendingTestStart != null) { uiHandler.removeCallbacks(pendingTestStart); pendingTestStart = null; }
         preTestSettings = null;
         settings.manualFocus = false;
         maybeOpenCamera();
@@ -302,7 +304,7 @@ public class MainActivity extends Activity implements IrRenderer.Host, CameraCon
         paletteScroll.setVisibility(mode == ProcessingParams.MODE_FALSE_COLOUR ? View.VISIBLE : View.GONE);
         if (mode == ProcessingParams.MODE_IR_TEST) {
             startIrTest();
-        } else if (irTest.isRunning()) {
+        } else if (irTest.isRunning() || pendingTestStart != null || preTestSettings != null) {
             irTest.cancel();
             renderer.setFastStats(false);
             restoreAfterIrTest();
@@ -320,21 +322,41 @@ public class MainActivity extends Activity implements IrRenderer.Host, CameraCon
     /** Settings in force before IR TEST darkened the exposure; null when no test is running. */
     private CameraController.Settings preTestSettings;
 
+    private final android.os.Handler uiHandler = new android.os.Handler(android.os.Looper.getMainLooper());
+    private Runnable pendingTestStart;
+
     private void startIrTest() {
         if (current == null) return;
-        irTest.start();
-        renderer.setFastStats(true);
-        // Under-expose by ~2 stops so ordinary bright areas don't clip; a remote's LED still will.
+        irTest.cancel();
+        if (pendingTestStart != null) uiHandler.removeCallbacks(pendingTestStart);
+        // 1) Under-expose by ~2 stops so ordinary bright areas don't clip; a remote's LED still will.
         if (preTestSettings == null) preTestSettings = settings.copy();
-        CameraController.Settings dark = preTestSettings.copy();
+        final CameraController.Settings dark = preTestSettings.copy();
         dark.manualExposure = false;
+        dark.lock3A = false;
         int evLo = current.evRange == null ? 0 : current.evRange.getLower();
         dark.evIndex = Math.max(evLo, Math.round(-2f / current.evStep));
         camera.updateSettings(dark);
-        showStatus("IR REMOTE TEST starting…", false);
+        showStatus("IR REMOTE TEST · settling exposure…", false);
+        // 2) Once auto-exposure has settled, freeze it (and white balance) so the exposure can't hunt
+        //    during the test: hunting makes the edges of bright areas shimmer like a blinking LED.
+        pendingTestStart = () -> {
+            pendingTestStart = null;
+            if (preTestSettings == null || params.mode != ProcessingParams.MODE_IR_TEST) return;
+            CameraController.Settings locked = dark.copy();
+            locked.lock3A = true;
+            camera.updateSettings(locked);
+            irTest.start();
+            renderer.setFastStats(true);
+        };
+        uiHandler.postDelayed(pendingTestStart, 1200);
     }
 
     private void restoreAfterIrTest() {
+        if (pendingTestStart != null) {
+            uiHandler.removeCallbacks(pendingTestStart);
+            pendingTestStart = null;
+        }
         if (preTestSettings != null) {
             preTestSettings = null;
             pushSettings();
@@ -355,7 +377,7 @@ public class MainActivity extends Activity implements IrRenderer.Host, CameraCon
         }
         new AlertDialog.Builder(this, android.R.style.Theme_DeviceDefault_Dialog_Alert)
                 .setTitle("IR test · camera " + (current == null ? "?" : current.id))
-                .setMessage(summary + "\n\nDuring the test the exposure is lowered ~2 stops; magenta marks clipped pixels. A real IR LED shows as a "
+                .setMessage(summary + "\n\nDuring the test the exposure is lowered ~2 stops and locked; magenta marks clipped pixels. A real IR LED shows as a "
                         + "pulsing white/violet dot.")
                 .setPositiveButton("Run again", (d, w) -> startIrTest())
                 .setNegativeButton("Done", (d, w) -> setMode(ProcessingParams.MODE_IR_MONO))
