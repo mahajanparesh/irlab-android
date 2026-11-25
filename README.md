@@ -1,5 +1,7 @@
 # IR Lab: experimental infrared camera for Android
 
+[![Build APK](https://github.com/mahajanparesh/irlab-android/actions/workflows/build.yml/badge.svg)](https://github.com/mahajanparesh/irlab-android/actions/workflows/build.yml)
+
 A native Android camera app (Java, Camera2, OpenGL ES 2.0). It has no third-party dependencies. It inspects the phone's camera hardware, reports honestly whether genuine infrared capture is possible, and offers real-time IR-style processing, residual-NIR capture, RAW DNG output and an empirical IR leak test.
 
 ## What to expect on a Galaxy S25 Ultra
