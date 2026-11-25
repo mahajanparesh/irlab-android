@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Lens ring with a warm "infrared" core: original IR Lab mark. -->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="108dp"
+    android:height="108dp"
+    android:viewportWidth="108"
+    android:viewportHeight="108">
+    <path
+        android:fillColor="#00000000"
+        android:strokeColor="#FFE8EAED"
+        android:strokeWidth="4"
+        android:pathData="M54,30 a24,24 0 1,0 0.01,0 z" />
+    <path
+        android:fillColor="#FF7A1F0E"
+        android:pathData="M54,38 a16,16 0 1,0 0.01,0 z" />
+    <path
+        android:fillColor="#FFFF5A36"
+        android:pathData="M54,43 a11,11 0 1,0 0.01,0 z" />
+    <path
+        android:fillColor="#FFFFC24A"
+        android:pathData="M54,48 a6,6 0 1,0 0.01,0 z" />
+    <path
+        android:fillColor="#FFFFFFFF"
+        android:pathData="M47,44 a3,3 0 1,0 0.01,0 z" />
+</vector>
