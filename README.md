@@ -22,7 +22,11 @@ The S25 Ultra has **no NIR sensor, no monochrome sensor and no time-of-flight ca
 
 The in-app **Hardware** screen confirms all of this from the live Camera2 data on your phone. It shows the colour-filter arrangement, capabilities, exposure range, RAW support and USB external-camera support. Use **Copy report** to save it.
 
-## Build and install (≈5 minutes)
+## Download a ready-built APK
+
+Every push to `main` is built by GitHub Actions. The latest APK is at [`builds/IRLab-latest.apk`](https://github.com/mahajanparesh/irlab-android/raw/builds/IRLab-latest.apk). Debug and release APKs are also attached to each [Actions run](https://github.com/mahajanparesh/irlab-android/actions). Install it on the phone and allow "Install unknown apps" for your browser or file manager when Android asks.
+
+## Build and install yourself (≈5 minutes)
 
 1. Install **Android Studio** (any 2024.2+ release).
 2. *File → Open* → select this `IRLab` folder. Let Gradle sync. Android Studio downloads SDK 35 and Gradle 8.11.1 if they're missing.
