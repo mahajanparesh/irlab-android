@@ -334,7 +334,7 @@ public class MainActivity extends Activity implements IrRenderer.Host, CameraCon
         }
         new AlertDialog.Builder(this, android.R.style.Theme_DeviceDefault_Dialog_Alert)
                 .setTitle("IR test · camera " + (current == null ? "?" : current.id))
-                .setMessage(summary + "\n\nThe magenta overlay marks very bright spots. A real IR LED shows as a "
+                .setMessage(summary + "\n\nThe magenta overlay marks clipped (fully saturated) pixels. A real IR LED shows as a "
                         + "pulsing white/violet dot.")
                 .setPositiveButton("Run again", (d, w) -> startIrTest())
                 .setNegativeButton("Done", (d, w) -> setMode(ProcessingParams.MODE_IR_MONO))

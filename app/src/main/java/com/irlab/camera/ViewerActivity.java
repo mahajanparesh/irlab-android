@@ -132,6 +132,7 @@ public class ViewerActivity extends Activity {
             } catch (Exception e) {
                 meta.append("Metadata unavailable: ").append(e.getMessage());
             }
+            if (raw) bmp = ImageSaver.applyRawOrientation(this, uri, bmp);
             final Bitmap fb = bmp;
             final String fe = err;
             final String fm = meta.toString();

@@ -167,10 +167,12 @@ public class GalleryActivity extends Activity {
             image.setImageBitmap(cached);
             if (cached != null) return;
             final Uri uri = it.uri;
+            final boolean isRaw = it.raw;
             loader.execute(() -> {
                 Bitmap b = null;
                 try {
                     b = getContentResolver().loadThumbnail(uri, new Size(320, 320), null);
+                    if (isRaw) b = ImageSaver.applyRawOrientation(GalleryActivity.this, uri, b);
                 } catch (Exception ignored) {
                 }
                 if (b == null) return;

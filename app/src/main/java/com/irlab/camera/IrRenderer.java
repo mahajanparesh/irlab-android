@@ -93,7 +93,8 @@ final class IrRenderer implements GLSurfaceView.Renderer, SurfaceTexture.OnFrame
             "  }\n" +
             "  else if (uMode < 3.5) { o = vec3(c.b, c.g, c.r); }\n" +
             "  else { float l = dot(c, vec3(0.299,0.587,0.114));\n" +
-            "         o = l > 0.85 ? vec3(1.0, 0.1, 1.0) : vec3(l * 0.55); }\n" +
+            "         float hot = max(max(c.r, c.g), c.b);\n" +
+            "         o = hot > 0.985 ? vec3(1.0, 0.1, 1.0) : vec3(l * 0.55); }\n" +
             "  gl_FragColor = vec4(clamp(o, 0.0, 1.0), 1.0);\n" +
             "}\n";
 

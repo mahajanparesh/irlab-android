@@ -135,6 +135,30 @@ final class ImageSaver {
         return b.toString();
     }
 
+    /**
+     * Android's DNG decoder ignores the DNG orientation tag, so RAW previews come out in sensor
+     * orientation. Rotate by the stored tag, unless the bitmap already looks rotated.
+     */
+    static Bitmap applyRawOrientation(Context ctx, Uri uri, Bitmap bmp) {
+        if (bmp == null) return null;
+        int degrees = 0;
+        try (InputStream in = ctx.getContentResolver().openInputStream(uri)) {
+            if (in == null) return bmp;
+            ExifInterface exif = new ExifInterface(in);
+            int o = exif.getAttributeInt(ExifInterface.TAG_ORIENTATION, ExifInterface.ORIENTATION_NORMAL);
+            if (o == ExifInterface.ORIENTATION_ROTATE_90) degrees = 90;
+            else if (o == ExifInterface.ORIENTATION_ROTATE_180) degrees = 180;
+            else if (o == ExifInterface.ORIENTATION_ROTATE_270) degrees = 270;
+        } catch (Exception e) {
+            return bmp;
+        }
+        if (degrees == 0) return bmp;
+        if ((degrees == 90 || degrees == 270) && bmp.getHeight() > bmp.getWidth()) return bmp; // already upright
+        android.graphics.Matrix m = new android.graphics.Matrix();
+        m.postRotate(degrees);
+        return Bitmap.createBitmap(bmp, 0, 0, bmp.getWidth(), bmp.getHeight(), m, true);
+    }
+
     static int exifOrientationFor(int degrees) {
         switch ((degrees % 360 + 360) % 360) {
             case 90: return ExifInterface.ORIENTATION_ROTATE_90;
